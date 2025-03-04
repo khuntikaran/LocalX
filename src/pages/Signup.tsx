@@ -53,9 +53,7 @@ const Signup = () => {
     if (!validateForm()) return;
     
     try {
-      // Extract name from email for simplicity as requested
-      const name = email.split('@')[0];
-      await signup(name, email, password);
+      await signup(email, password);
       
       toast.success("Account created", {
         description: "Your account has been successfully created"
@@ -75,7 +73,7 @@ const Signup = () => {
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">
-            Create an account
+            Create a LocalX account
           </CardTitle>
           <CardDescription>
             Enter your email and password to create your account

@@ -68,7 +68,7 @@ const Login = () => {
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">
-            Welcome back
+            Welcome to LocalX
           </CardTitle>
           <CardDescription>
             Enter your credentials to login to your account

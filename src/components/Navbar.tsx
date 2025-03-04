@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,7 @@ export const Navbar = () => {
     <header className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <span className="font-bold text-xl">FileConverter</span>
+          <span className="font-bold text-xl">LocalX</span>
         </Link>
         
         <nav className="hidden md:flex gap-6 items-center">

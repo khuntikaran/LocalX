@@ -1,11 +1,29 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { 
+  doc, 
+  setDoc, 
+  getDoc, 
+  updateDoc,
+  serverTimestamp 
+} from 'firebase/firestore';
+import { auth, db } from '../firebase/config';
+import { toast } from 'sonner';
 
 type User = {
   id: string;
   email: string;
   name: string;
   subscription: 'free' | 'premium';
+  conversionsUsed: number;
+  maxFreeConversions: number;
 };
 
 type AuthContextType = {
@@ -13,9 +31,11 @@ type AuthContextType = {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   updateSubscription: (plan: 'free' | 'premium') => Promise<void>;
+  incrementConversionsUsed: () => Promise<void>;
+  hasRemainingFreeConversions: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,58 +44,85 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // The maximum number of free conversions
+  const MAX_FREE_CONVERSIONS = 5;
+
   useEffect(() => {
-    // Check if user is stored in localStorage
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          
+          if (userDoc.exists()) {
+            const userData = userDoc.data() as Omit<User, 'id'>;
+            setUser({
+              id: firebaseUser.uid,
+              ...userData,
+              maxFreeConversions: MAX_FREE_CONVERSIONS
+            });
+          } else {
+            // If user document doesn't exist but auth does, create a new document
+            const newUser = {
+              email: firebaseUser.email || '',
+              name: firebaseUser.email ? firebaseUser.email.split('@')[0] : '',
+              subscription: 'free',
+              conversionsUsed: 0,
+              createdAt: serverTimestamp()
+            };
+            
+            await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+            
+            setUser({
+              id: firebaseUser.uid,
+              ...newUser,
+              maxFreeConversions: MAX_FREE_CONVERSIONS
+            });
+          }
+        } catch (error) {
+          console.error('Error getting user data:', error);
+          toast.error('Error loading user data');
+        }
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Simulate API call
     setIsLoading(true);
     try {
-      // This would be a real API call in production
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock user for demo purposes
-      const mockUser: User = {
-        id: '1',
-        email,
-        name: email.split('@')[0],
-        subscription: 'free'
-      };
-      
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
-      console.error('Login failed', error);
+      const errorMessage = (error as Error).message;
+      toast.error('Login failed', { description: errorMessage });
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const signup = async (name: string, email: string, password: string) => {
+  const signup = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // This would be a real API call in production
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const { user: firebaseUser } = userCredential;
       
-      // Mock user creation
-      const mockUser: User = {
-        id: Date.now().toString(),
-        email,
-        name,
-        subscription: 'free'
+      // Create user document in Firestore
+      const newUser = {
+        email: email,
+        name: email.split('@')[0],
+        subscription: 'free',
+        conversionsUsed: 0,
+        createdAt: serverTimestamp()
       };
       
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
     } catch (error) {
-      console.error('Signup failed', error);
+      const errorMessage = (error as Error).message;
+      toast.error('Signup failed', { description: errorMessage });
       throw error;
     } finally {
       setIsLoading(false);
@@ -85,13 +132,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     setIsLoading(true);
     try {
-      // This would be a real API call in production
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setUser(null);
-      localStorage.removeItem('user');
+      await signOut(auth);
     } catch (error) {
-      console.error('Logout failed', error);
+      const errorMessage = (error as Error).message;
+      toast.error('Logout failed', { description: errorMessage });
     } finally {
       setIsLoading(false);
     }
@@ -102,19 +146,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     setIsLoading(true);
     try {
-      // This would be a real API call in production
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await updateDoc(doc(db, 'users', user.id), {
+        subscription: plan
+      });
       
-      const updatedUser = { ...user, subscription: plan };
-      setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      setUser({
+        ...user,
+        subscription: plan
+      });
+      
+      toast.success('Subscription updated successfully');
     } catch (error) {
-      console.error('Subscription update failed', error);
+      const errorMessage = (error as Error).message;
+      toast.error('Subscription update failed', { description: errorMessage });
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
+
+  const incrementConversionsUsed = async () => {
+    if (!user) return;
+    
+    try {
+      const newCount = user.conversionsUsed + 1;
+      
+      await updateDoc(doc(db, 'users', user.id), {
+        conversionsUsed: newCount
+      });
+      
+      setUser({
+        ...user,
+        conversionsUsed: newCount
+      });
+    } catch (error) {
+      console.error('Error incrementing conversions count:', error);
+    }
+  };
+
+  const hasRemainingFreeConversions = 
+    !user || 
+    user.subscription === 'premium' || 
+    user.conversionsUsed < MAX_FREE_CONVERSIONS;
 
   return (
     <AuthContext.Provider
@@ -125,7 +198,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         signup,
         logout,
-        updateSubscription
+        updateSubscription,
+        incrementConversionsUsed,
+        hasRemainingFreeConversions
       }}
     >
       {children}

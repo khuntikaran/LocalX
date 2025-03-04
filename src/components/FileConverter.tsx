@@ -6,8 +6,10 @@ import { getExtension } from '../utils/formatHelpers';
 import { useFileConversion } from '../hooks/useFileConversion';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { RotateCw, Download, CheckCircle, AlertCircle } from 'lucide-react';
+import { RotateCw, Download, CheckCircle, AlertCircle, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
+import { Link } from 'react-router-dom';
 
 export const FileConverter = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -24,6 +26,13 @@ export const FileConverter = () => {
     reset,
     isPremium
   } = useFileConversion();
+  
+  const { 
+    isAuthenticated, 
+    user, 
+    incrementConversionsUsed, 
+    hasRemainingFreeConversions 
+  } = useAuth();
   
   useEffect(() => {
     if (file) {
@@ -55,8 +64,23 @@ export const FileConverter = () => {
       return;
     }
     
+    // Check if user has free conversions left
+    if (!hasRemainingFreeConversions) {
+      toast({
+        title: "Free limit reached",
+        description: "You've used your 5 free conversions. Please upgrade to premium to continue.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     try {
-      await startConversion(file, targetFormat);
+      const conversionResult = await startConversion(file, targetFormat);
+      
+      if (conversionResult?.success && isAuthenticated) {
+        // Only increment if conversion was successful and user is logged in
+        await incrementConversionsUsed();
+      }
     } catch (error) {
       console.error('Conversion error:', error);
     }
@@ -85,6 +109,13 @@ export const FileConverter = () => {
     reset();
   };
   
+  // Show remaining conversions for free users
+  const getRemainingConversions = () => {
+    if (!isAuthenticated || !user) return 5;
+    if (user.subscription === 'premium') return '∞';
+    return Math.max(0, user.maxFreeConversions - user.conversionsUsed);
+  };
+  
   return (
     <div className="w-full max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-8">
@@ -94,7 +125,49 @@ export const FileConverter = () => {
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
           Your files stay on your device. No uploads to external servers.
         </p>
+        
+        {isAuthenticated && (
+          <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+            {user?.subscription === 'premium' ? (
+              <>Premium Account</>
+            ) : (
+              <>Conversions left: {getRemainingConversions()}</>
+            )}
+          </div>
+        )}
       </div>
+      
+      {/* Conversion limit warning for non-premium users */}
+      {isAuthenticated && 
+       user?.subscription !== 'premium' && 
+       user?.conversionsUsed >= 3 && 
+       user?.conversionsUsed < user?.maxFreeConversions && (
+        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800/30 dark:text-yellow-400">
+          <p className="font-medium">You have {user.maxFreeConversions - user.conversionsUsed} free conversions left</p>
+          <p className="text-sm mt-1">Upgrade to premium for unlimited conversions.</p>
+          <div className="mt-3">
+            <Link to="/dashboard">
+              <Button variant="outline" size="sm">Upgrade Now</Button>
+            </Link>
+          </div>
+        </div>
+      )}
+      
+      {/* Free limit reached message */}
+      {!hasRemainingFreeConversions && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-lg text-red-600 flex items-start space-x-3 dark:bg-red-900/20 dark:border-red-800/30 dark:text-red-400">
+          <Lock className="h-5 w-5 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="font-medium">Free limit reached</p>
+            <p className="text-sm mt-1">You've used all 5 free conversions. Upgrade to premium for unlimited conversions.</p>
+            <div className="mt-3">
+              <Link to="/dashboard">
+                <Button>Upgrade to Premium</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
       
       {!result ? (
         <>
@@ -116,7 +189,7 @@ export const FileConverter = () => {
             <div className="mt-8 text-center animate-fade-up">
               <Button
                 onClick={handleConvert}
-                disabled={isConverting || !targetFormat}
+                disabled={isConverting || !targetFormat || !hasRemainingFreeConversions}
                 className="w-full sm:w-auto"
                 size="lg"
               >
