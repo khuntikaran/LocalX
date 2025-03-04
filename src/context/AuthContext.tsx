@@ -4,8 +4,7 @@ import {
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
   signOut,
-  onAuthStateChanged,
-  User as FirebaseUser
+  onAuthStateChanged
 } from 'firebase/auth';
 import { 
   doc, 
@@ -54,10 +53,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           
           if (userDoc.exists()) {
-            const userData = userDoc.data() as Omit<User, 'id'>;
+            const userData = userDoc.data();
             setUser({
               id: firebaseUser.uid,
-              ...userData,
+              email: userData.email || '',
+              name: userData.name || '',
+              subscription: userData.subscription as 'free' | 'premium',
+              conversionsUsed: userData.conversionsUsed || 0,
               maxFreeConversions: MAX_FREE_CONVERSIONS
             });
           } else {
@@ -65,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const newUser = {
               email: firebaseUser.email || '',
               name: firebaseUser.email ? firebaseUser.email.split('@')[0] : '',
-              subscription: 'free',
+              subscription: 'free' as const,
               conversionsUsed: 0,
               createdAt: serverTimestamp()
             };
@@ -114,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const newUser = {
         email: email,
         name: email.split('@')[0],
-        subscription: 'free',
+        subscription: 'free' as const,
         conversionsUsed: 0,
         createdAt: serverTimestamp()
       };
