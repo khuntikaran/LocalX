@@ -148,6 +148,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
       
       await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+      
+      // Set the user state immediately to avoid delay
+      setUser({
+        id: firebaseUser.uid,
+        ...newUser,
+        maxFreeConversions: MAX_FREE_CONVERSIONS
+      });
+      
     } catch (error) {
       console.error('Signup error:', error);
       const errorMessage = formatAuthError(error as AuthError);

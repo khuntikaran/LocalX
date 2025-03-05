@@ -10,12 +10,12 @@ import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
 const Signup = () => {
-  const { signup, isLoading } = useAuth();
+  const { signup, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [localLoading, setLocalLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({
     email: '',
     password: ''
@@ -53,7 +53,7 @@ const Signup = () => {
     
     if (!validateForm()) return;
     
-    setLocalLoading(true);
+    setIsLoading(true);
     
     try {
       await signup(email, password);
@@ -62,11 +62,14 @@ const Signup = () => {
         description: "Your account has been successfully created"
       });
       
-      navigate('/dashboard');
+      // Add a short delay to ensure Firebase auth state updates
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 500);
     } catch (error) {
       console.error('Signup error:', error);
     } finally {
-      setLocalLoading(false);
+      setIsLoading(false);
     }
   };
   
@@ -91,7 +94,7 @@ const Signup = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="example@example.com"
-                disabled={localLoading || isLoading}
+                disabled={isLoading || authLoading}
                 className={`border-sky-200 focus-visible:ring-sky-400 ${errors.email ? 'border-red-500' : ''}`}
               />
               {errors.email && (
@@ -107,7 +110,7 @@ const Signup = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                disabled={localLoading || isLoading}
+                disabled={isLoading || authLoading}
                 className={`border-sky-200 focus-visible:ring-sky-400 ${errors.password ? 'border-red-500' : ''}`}
               />
               {errors.password && (
@@ -120,10 +123,10 @@ const Signup = () => {
           <Button 
             type="submit" 
             className="w-full bg-sky-500 hover:bg-sky-600 text-white" 
-            disabled={localLoading || isLoading}
+            disabled={isLoading || authLoading}
             onClick={handleSubmit}
           >
-            {localLoading || isLoading ? (
+            {isLoading || authLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Creating account...

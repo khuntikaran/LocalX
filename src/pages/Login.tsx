@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,12 +10,12 @@ import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
 const Login = () => {
-  const { login, isLoading } = useAuth();
+  const { login, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [localLoading, setLocalLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({
     email: '',
     password: ''
@@ -50,14 +50,19 @@ const Login = () => {
     
     if (!validateForm()) return;
     
-    setLocalLoading(true);
+    setIsLoading(true);
     
     try {
       await login(email, password);
+      
       toast.success("Welcome back!", {
         description: "You have successfully logged in"
       });
-      navigate('/dashboard');
+      
+      // Add a short delay to ensure Firebase auth state updates
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 500);
     } catch (error: any) {
       console.error('Login error:', error);
       
@@ -72,7 +77,7 @@ const Login = () => {
         });
       }
     } finally {
-      setLocalLoading(false);
+      setIsLoading(false);
     }
   };
   
@@ -97,7 +102,7 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="example@example.com"
-                disabled={localLoading || isLoading}
+                disabled={isLoading || authLoading}
                 className={`border-sky-200 focus-visible:ring-sky-400 ${errors.email ? 'border-red-500' : ''}`}
               />
               {errors.email && (
@@ -113,7 +118,7 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                disabled={localLoading || isLoading}
+                disabled={isLoading || authLoading}
                 className={`border-sky-200 focus-visible:ring-sky-400 ${errors.password ? 'border-red-500' : ''}`}
               />
               {errors.password && (
@@ -126,10 +131,10 @@ const Login = () => {
           <Button 
             type="submit" 
             className="w-full bg-sky-500 hover:bg-sky-600 text-white" 
-            disabled={localLoading || isLoading}
+            disabled={isLoading || authLoading}
             onClick={handleSubmit}
           >
-            {localLoading || isLoading ? (
+            {isLoading || authLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Logging in...
