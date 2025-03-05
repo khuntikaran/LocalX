@@ -56,18 +56,27 @@ const Signup = () => {
     setIsLoading(true);
     
     try {
+      // Check if online
+      if (!navigator.onLine) {
+        throw new Error('You appear to be offline. Please check your internet connection and try again.');
+      }
+      
       await signup(email, password);
       
       toast.success("Account created", {
         description: "Your account has been successfully created"
       });
       
-      // Add a short delay to ensure Firebase auth state updates
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 500);
+      // Navigate to dashboard
+      navigate('/dashboard');
+      
     } catch (error) {
       console.error('Signup error:', error);
+      let errorMessage = error instanceof Error ? error.message : "An unknown error occurred. Please try again.";
+      
+      toast.error("Signup failed", {
+        description: errorMessage
+      });
     } finally {
       setIsLoading(false);
     }

@@ -1,15 +1,24 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navbar } from '../components/Navbar';
 import { FileConverter } from '../components/FileConverter';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Dashboard = () => {
   const { user, isLoading, logout } = useAuth();
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    // If we're not loading and there's no user, redirect to home
+    if (!isLoading && !user) {
+      toast.error('Please log in to access the dashboard');
+      navigate('/');
+    }
+  }, [isLoading, user, navigate]);
   
   // If still loading, show a loading spinner
   if (isLoading) {
@@ -21,9 +30,8 @@ const Dashboard = () => {
     );
   }
   
-  // If not authenticated, redirect to home
+  // If not authenticated, don't render anything while redirecting
   if (!user) {
-    navigate('/');
     return null;
   }
   

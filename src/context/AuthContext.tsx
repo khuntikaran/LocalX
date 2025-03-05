@@ -51,6 +51,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
+          if (!navigator.onLine) {
+            // Handle offline state
+            console.log('User is offline, using local info if available');
+            // Create a minimal user object to allow navigation
+            setUser({
+              id: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              name: firebaseUser.email ? firebaseUser.email.split('@')[0] : '',
+              subscription: 'free',
+              conversionsUsed: 0,
+              maxFreeConversions: MAX_FREE_CONVERSIONS
+            });
+            setIsLoading(false);
+            return;
+          }
+
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           
           if (userDoc.exists()) {
@@ -83,7 +99,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } catch (error) {
           console.error('Error getting user data:', error);
-          toast.error('Error loading user data');
+          // Create a minimal user object to allow navigation if there's an error
+          setUser({
+            id: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            name: firebaseUser.email ? firebaseUser.email.split('@')[0] : '',
+            subscription: 'free',
+            conversionsUsed: 0,
+            maxFreeConversions: MAX_FREE_CONVERSIONS
+          });
+          
+          if (navigator.onLine) {
+            toast.error('Error loading user data. Some features may be limited.');
+          } else {
+            toast.error('You appear to be offline. Limited functionality available.');
+          }
         }
       } else {
         setUser(null);
@@ -121,6 +151,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      if (!navigator.onLine) {
+        throw new Error('You appear to be offline. Please check your internet connection and try again.');
+      }
+      
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
       console.error('Login error:', error);
@@ -135,6 +169,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signup = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      if (!navigator.onLine) {
+        throw new Error('You appear to be offline. Please check your internet connection and try again.');
+      }
+      
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const { user: firebaseUser } = userCredential;
       
