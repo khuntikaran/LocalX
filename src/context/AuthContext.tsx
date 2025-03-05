@@ -4,7 +4,8 @@ import {
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  AuthError
 } from 'firebase/auth';
 import { 
   doc, 
@@ -93,12 +94,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, []);
 
+  const formatAuthError = (error: AuthError): string => {
+    const errorCode = error.code;
+    console.log('Auth error code:', errorCode);
+    
+    switch(errorCode) {
+      case 'auth/user-not-found':
+        return 'No account found with this email. Please sign up first.';
+      case 'auth/wrong-password':
+        return 'Incorrect password. Please try again.';
+      case 'auth/email-already-in-use':
+        return 'An account with this email already exists. Please log in instead.';
+      case 'auth/weak-password':
+        return 'Password is too weak. It should be at least 6 characters.';
+      case 'auth/invalid-email':
+        return 'The email address is badly formatted.';
+      case 'auth/operation-not-allowed':
+        return 'Email/Password authentication is not enabled. Please contact support.';
+      case 'auth/too-many-requests':
+        return 'Access temporarily disabled due to many failed login attempts. Try again later.';
+      default:
+        return error.message || 'An unknown error occurred. Please try again.';
+    }
+  };
+
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
-      const errorMessage = (error as Error).message;
+      console.error('Login error:', error);
+      const errorMessage = formatAuthError(error as AuthError);
       toast.error('Login failed', { description: errorMessage });
       throw error;
     } finally {
@@ -123,7 +149,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
     } catch (error) {
-      const errorMessage = (error as Error).message;
+      console.error('Signup error:', error);
+      const errorMessage = formatAuthError(error as AuthError);
       toast.error('Signup failed', { description: errorMessage });
       throw error;
     } finally {

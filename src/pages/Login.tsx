@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,11 +55,19 @@ const Login = () => {
         description: "You have successfully logged in"
       });
       navigate('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      toast.error("Login failed", {
-        description: error instanceof Error ? error.message : "An error occurred. Please try again."
-      });
+      
+      // Check if it's a user-not-found error and suggest signup
+      if (error.code === 'auth/user-not-found') {
+        toast.error("Account not found", {
+          description: "No account exists with this email. Would you like to create one?",
+          action: {
+            label: "Sign up",
+            onClick: () => navigate('/signup')
+          }
+        });
+      }
     }
   };
   
