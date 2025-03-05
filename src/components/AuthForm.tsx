@@ -6,8 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '../context/AuthContext';
-import { toast } from '@/hooks/use-toast';
-import { EyeIcon, EyeOffIcon, LoaderIcon } from 'lucide-react';
+import { toast } from 'sonner';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 
 type AuthMode = 'login' | 'signup';
 
@@ -20,12 +20,10 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({
-    name: '',
     email: '',
     password: ''
   });
@@ -33,15 +31,9 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
   const validateForm = () => {
     let valid = true;
     const newErrors = {
-      name: '',
       email: '',
       password: ''
     };
-    
-    if (mode === 'signup' && !name.trim()) {
-      newErrors.name = 'Name is required';
-      valid = false;
-    }
     
     if (!email.trim()) {
       newErrors.email = 'Email is required';
@@ -71,15 +63,13 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
     try {
       if (mode === 'login') {
         await login(email, password);
-        toast({
-          title: "Welcome back!",
-          description: "You have successfully logged in",
+        toast.success("Welcome back!", {
+          description: "You have successfully logged in"
         });
       } else {
-        await signup(name, email, password);
-        toast({
-          title: "Account created",
-          description: "Your account has been successfully created",
+        await signup(email, password);
+        toast.success("Account created", {
+          description: "Your account has been successfully created"
         });
       }
       
@@ -92,10 +82,8 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
       }
     } catch (error) {
       console.error('Authentication error:', error);
-      toast({
-        title: "Authentication failed",
-        description: error instanceof Error ? error.message : "An error occurred. Please try again.",
-        variant: "destructive",
+      toast.error("Authentication failed", {
+        description: error instanceof Error ? error.message : "An error occurred. Please try again."
       });
     }
   };
@@ -106,37 +94,19 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
   
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4">
-      <Card className="w-full max-w-md animate-scale-in shadow-xl">
+      <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">
-            {mode === 'login' ? 'Welcome back' : 'Create an account'}
+            {mode === 'login' ? 'Welcome to LocalX' : 'Create a LocalX account'}
           </CardTitle>
           <CardDescription>
             {mode === 'login' 
               ? 'Enter your credentials to login to your account' 
-              : 'Fill in the form below to create your account'}
+              : 'Enter your email and password to create your account'}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {mode === 'signup' && (
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="John Doe"
-                  disabled={isLoading}
-                  className={errors.name ? 'border-red-500' : ''}
-                />
-                {errors.name && (
-                  <p className="text-sm text-red-500">{errors.name}</p>
-                )}
-              </div>
-            )}
-            
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -171,9 +141,9 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
                 >
                   {showPassword ? (
-                    <EyeOffIcon className="h-5 w-5" />
+                    <EyeOff className="h-5 w-5" />
                   ) : (
-                    <EyeIcon className="h-5 w-5" />
+                    <Eye className="h-5 w-5" />
                   )}
                 </button>
               </div>
@@ -192,7 +162,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
           >
             {isLoading ? (
               <>
-                <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {mode === 'login' ? 'Logging in...' : 'Creating account...'}
               </>
             ) : (
