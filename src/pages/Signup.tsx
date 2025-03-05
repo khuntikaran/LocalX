@@ -15,6 +15,7 @@ const Signup = () => {
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [localLoading, setLocalLoading] = useState(false);
   const [errors, setErrors] = useState({
     email: '',
     password: ''
@@ -52,6 +53,8 @@ const Signup = () => {
     
     if (!validateForm()) return;
     
+    setLocalLoading(true);
+    
     try {
       await signup(email, password);
       
@@ -62,35 +65,34 @@ const Signup = () => {
       navigate('/dashboard');
     } catch (error) {
       console.error('Signup error:', error);
-      toast.error("Signup failed", {
-        description: error instanceof Error ? error.message : "An error occurred. Please try again."
-      });
+    } finally {
+      setLocalLoading(false);
     }
   };
   
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
-      <Card className="w-full max-w-md shadow-xl">
+    <div className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-b from-sky-50 to-white">
+      <Card className="w-full max-w-md shadow-xl border-sky-100">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">
+          <CardTitle className="text-2xl font-bold text-sky-700">
             Create a LocalX account
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-sky-600">
             Enter your email and password to create your account
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-sky-700">Email</Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="example@example.com"
-                disabled={isLoading}
-                className={errors.email ? 'border-red-500' : ''}
+                disabled={localLoading || isLoading}
+                className={`border-sky-200 focus-visible:ring-sky-400 ${errors.email ? 'border-red-500' : ''}`}
               />
               {errors.email && (
                 <p className="text-sm text-red-500">{errors.email}</p>
@@ -98,15 +100,15 @@ const Signup = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-sky-700">Password</Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                disabled={isLoading}
-                className={errors.password ? 'border-red-500' : ''}
+                disabled={localLoading || isLoading}
+                className={`border-sky-200 focus-visible:ring-sky-400 ${errors.password ? 'border-red-500' : ''}`}
               />
               {errors.password && (
                 <p className="text-sm text-red-500">{errors.password}</p>
@@ -117,11 +119,11 @@ const Signup = () => {
         <CardFooter className="flex flex-col space-y-4">
           <Button 
             type="submit" 
-            className="w-full" 
-            disabled={isLoading}
+            className="w-full bg-sky-500 hover:bg-sky-600 text-white" 
+            disabled={localLoading || isLoading}
             onClick={handleSubmit}
           >
-            {isLoading ? (
+            {localLoading || isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Creating account...
@@ -132,11 +134,11 @@ const Signup = () => {
           </Button>
           
           <div className="text-center text-sm">
-            <p>
+            <p className="text-sky-600">
               Already have an account?{' '}
               <Button 
                 variant="link" 
-                className="p-0 h-auto" 
+                className="p-0 h-auto text-sky-700 hover:text-sky-800" 
                 onClick={() => navigate('/login')}
               >
                 Login
