@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { convertFile, ConversionResult } from '../utils/fileConversion';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'sonner';
 
 interface ConversionState {
   isConverting: boolean;
@@ -42,6 +43,10 @@ export function useFileConversion() {
         }));
         return;
       }
+
+      toast.info("Converting locally", {
+        description: "Your file is being processed on your device, not on our servers"
+      });
       
       // Simulate progress updates
       const progressInterval = setInterval(() => {
@@ -57,7 +62,7 @@ export function useFileConversion() {
         });
       }, 200);
       
-      // Perform the conversion
+      // Perform the conversion locally
       const result = await convertFile(file, targetFormat);
       
       // Clear the interval and set the final state

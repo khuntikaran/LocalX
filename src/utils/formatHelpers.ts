@@ -1,9 +1,8 @@
-
 export interface FormatOption {
   id: string;
   label: string;
   description: string;
-  category: 'image' | 'document' | 'audio' | 'video' | 'archive';
+  category: 'image' | 'document' | 'audio' | 'video' | 'archive' | '3d';
   extensions: string[];
 }
 
@@ -44,6 +43,15 @@ export const formats: FormatOption[] = [
     description: 'Scalable Vector Graphics',
     category: 'image',
     extensions: ['.svg']
+  },
+  
+  // 3D format
+  {
+    id: '3d',
+    label: '3D Model',
+    description: 'Convert image to 3D height map',
+    category: '3d',
+    extensions: ['.png']
   },
   
   // Document formats

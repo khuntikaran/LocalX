@@ -111,7 +111,7 @@ export const FileConverter = () => {
   
   // Show remaining conversions for free users
   const getRemainingConversions = () => {
-    if (!isAuthenticated || !user) return 5;
+    if (!isAuthenticated || !user) return 10; // Updated to 10
     if (user.subscription === 'premium') return '∞';
     return Math.max(0, user.maxFreeConversions - user.conversionsUsed);
   };
@@ -140,7 +140,7 @@ export const FileConverter = () => {
       {/* Conversion limit warning for non-premium users */}
       {isAuthenticated && 
        user?.subscription !== 'premium' && 
-       user?.conversionsUsed >= 3 && 
+       user?.conversionsUsed >= 6 && // Updated threshold
        user?.conversionsUsed < user?.maxFreeConversions && (
         <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800/30 dark:text-yellow-400">
           <p className="font-medium">You have {user.maxFreeConversions - user.conversionsUsed} free conversions left</p>
@@ -159,7 +159,7 @@ export const FileConverter = () => {
           <Lock className="h-5 w-5 mt-0.5 flex-shrink-0" />
           <div>
             <p className="font-medium">Free limit reached</p>
-            <p className="text-sm mt-1">You've used all 5 free conversions. Upgrade to premium for unlimited conversions.</p>
+            <p className="text-sm mt-1">You've used all 10 free conversions. Upgrade to premium for unlimited conversions.</p>
             <div className="mt-3">
               <Link to="/dashboard">
                 <Button>Upgrade to Premium</Button>

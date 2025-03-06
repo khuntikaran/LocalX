@@ -4,7 +4,7 @@ import { formats, getFormatByExtension, groupFormatsByCategory } from '../utils/
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { CheckIcon, ImageIcon, FileTextIcon, MusicIcon, VideoIcon, ArchiveIcon } from 'lucide-react';
+import { CheckIcon, ImageIcon, FileTextIcon, MusicIcon, VideoIcon, ArchiveIcon, Cube } from 'lucide-react';
 
 interface ConversionOptionsProps {
   sourceFormat: string;
@@ -18,7 +18,8 @@ const categoryIcons = {
   document: <FileTextIcon className="w-4 h-4" />,
   audio: <MusicIcon className="w-4 h-4" />,
   video: <VideoIcon className="w-4 h-4" />,
-  archive: <ArchiveIcon className="w-4 h-4" />
+  archive: <ArchiveIcon className="w-4 h-4" />,
+  '3d': <Cube className="w-4 h-4" />
 };
 
 export const ConversionOptions: React.FC<ConversionOptionsProps> = ({
@@ -43,9 +44,9 @@ export const ConversionOptions: React.FC<ConversionOptionsProps> = ({
   const groupedFormats = groupFormatsByCategory();
   
   // Filter out the source format from the options
-  const formatOptions = groupedFormats[sourceFormatObj.category].filter(
+  const formatOptions = groupedFormats[sourceFormatObj.category]?.filter(
     format => format.id !== sourceFormatObj.id
-  );
+  ) || [];
   
   const handleTabChange = (value: string) => {
     setSelectedTab(value);
@@ -55,6 +56,9 @@ export const ConversionOptions: React.FC<ConversionOptionsProps> = ({
       onSelectFormat('');
     }
   };
+  
+  // Check if source format is an image and 3D conversion is available
+  const show3DOption = sourceFormatObj.category === 'image';
   
   return (
     <div className="w-full max-w-xl mx-auto mt-8 animate-fade-up">
@@ -78,7 +82,7 @@ export const ConversionOptions: React.FC<ConversionOptionsProps> = ({
       <div className="mb-4">
         <Label className="text-base font-medium mb-2 block">Convert To:</Label>
         <Tabs defaultValue={sourceFormatObj.category} value={selectedTab} onValueChange={handleTabChange}>
-          <TabsList className="grid grid-cols-5 mb-4">
+          <TabsList className={`grid ${show3DOption ? 'grid-cols-6' : 'grid-cols-5'} mb-4`}>
             <TabsTrigger value="image" disabled={isConverting}>
               <div className="flex items-center space-x-2">
                 <ImageIcon className="w-4 h-4" />
@@ -109,9 +113,18 @@ export const ConversionOptions: React.FC<ConversionOptionsProps> = ({
                 <span className="hidden sm:inline">Archive</span>
               </div>
             </TabsTrigger>
+            {show3DOption && (
+              <TabsTrigger value="3d" disabled={isConverting}>
+                <div className="flex items-center space-x-2">
+                  <Cube className="w-4 h-4" />
+                  <span className="hidden sm:inline">3D</span>
+                </div>
+              </TabsTrigger>
+            )}
           </TabsList>
           
-          {Object.keys(groupedFormats).map((category) => (
+          {/* Standard category conversion tabs */}
+          {Object.keys(groupedFormats).filter(cat => cat !== '3d').map((category) => (
             <TabsContent key={category} value={category} className="pt-2">
               {category !== sourceFormatObj.category ? (
                 <div className="p-4 bg-amber-50 rounded-lg border border-amber-100 text-amber-800 mb-4 dark:bg-amber-900/20 dark:border-amber-800/30 dark:text-amber-400">
@@ -123,7 +136,7 @@ export const ConversionOptions: React.FC<ConversionOptionsProps> = ({
               
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {groupedFormats[category]
-                  .filter(format => format.id !== sourceFormatObj.id)
+                  ?.filter(format => format.id !== sourceFormatObj.id)
                   .map((format) => (
                     <Button
                       key={format.id}
@@ -151,13 +164,49 @@ export const ConversionOptions: React.FC<ConversionOptionsProps> = ({
                   ))}
               </div>
               
-              {groupedFormats[category].filter(format => format.id !== sourceFormatObj.id).length === 0 && (
+              {(!groupedFormats[category] || groupedFormats[category].filter(format => format.id !== sourceFormatObj.id).length === 0) && (
                 <p className="text-center text-gray-500 my-4">
                   No conversion options available for this category.
                 </p>
               )}
             </TabsContent>
           ))}
+          
+          {/* Special 3D conversion tab */}
+          {show3DOption && (
+            <TabsContent key="3d" value="3d" className="pt-2">
+              <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 text-blue-800 mb-4 dark:bg-blue-900/20 dark:border-blue-800/30 dark:text-blue-400">
+                <p>
+                  Convert your image to a 3D height map. Works best with images that have clear contrast.
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-3">
+                <Button
+                  variant={selectedFormat === '3d' ? "default" : "outline"}
+                  className={`justify-start h-auto py-3 px-4 ${
+                    selectedFormat === '3d' ? "border-primary" : ""
+                  }`}
+                  onClick={() => onSelectFormat('3d')}
+                  disabled={isConverting}
+                >
+                  <div className="flex items-center space-x-2 w-full">
+                    <div className="flex-shrink-0">
+                      {selectedFormat === '3d' ? (
+                        <CheckIcon className="h-5 w-5 text-white" />
+                      ) : (
+                        <Cube className="h-5 w-5" />
+                      )}
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <span className="font-medium">3D Height Map</span>
+                      <span className="text-xs opacity-70">Image to 3D conversion</span>
+                    </div>
+                  </div>
+                </Button>
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>

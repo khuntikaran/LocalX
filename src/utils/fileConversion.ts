@@ -1,5 +1,6 @@
 
 import { getExtension, getFormatByExtension } from './formatHelpers';
+import { convertImageTo3D } from './image3DConversion';
 
 // Define the conversion result type
 export interface ConversionResult {
@@ -7,6 +8,7 @@ export interface ConversionResult {
   file?: File;
   error?: string;
   url?: string;
+  is3D?: boolean;
 }
 
 // Main conversion function
@@ -15,6 +17,28 @@ export async function convertFile(
   targetFormat: string
 ): Promise<ConversionResult> {
   try {
+    console.log('Starting local file conversion');
+    
+    // Special case for 3D conversion
+    if (targetFormat === '3d') {
+      console.log('Converting image to 3D model');
+      const result = await convertImageTo3D(file);
+      if (result.success && result.url) {
+        const blob = await fetch(result.url).then(r => r.blob());
+        const convertedFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.png'), { type: 'image/png' });
+        return {
+          success: true,
+          file: convertedFile,
+          url: result.url,
+          is3D: true
+        };
+      }
+      return {
+        success: false,
+        error: result.error || 'Failed to convert to 3D'
+      };
+    }
+    
     // Get the source format
     const sourceExtension = getExtension(file.name);
     const sourceFormat = getFormatByExtension(sourceExtension);
@@ -26,6 +50,8 @@ export async function convertFile(
         error: 'Unsupported format' 
       };
     }
+    
+    console.log(`Converting from ${sourceFormat.label} to ${targetFormatObj.label} locally`);
     
     // For demo purposes, we're simulating the conversion process
     // In a real app, you would use libraries like FFMPEG.wasm, image-conversion, etc.

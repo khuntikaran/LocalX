@@ -43,17 +43,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // The maximum number of free conversions
-  const MAX_FREE_CONVERSIONS = 5;
+  const MAX_FREE_CONVERSIONS = 10;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
           if (!navigator.onLine) {
-            // Handle offline state
             console.log('User is offline, using local info if available');
-            // Create a minimal user object to allow navigation
             setUser({
               id: firebaseUser.uid,
               email: firebaseUser.email || '',
@@ -79,7 +76,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               maxFreeConversions: MAX_FREE_CONVERSIONS
             });
           } else {
-            // If user document doesn't exist but auth does, create a new document
             const newUser = {
               email: firebaseUser.email || '',
               name: firebaseUser.email ? firebaseUser.email.split('@')[0] : '',
@@ -98,7 +94,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } catch (error) {
           console.error('Error getting user data:', error);
-          // Create a minimal user object to allow navigation if there's an error
           setUser({
             id: firebaseUser.uid,
             email: firebaseUser.email || '',
@@ -175,7 +170,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const { user: firebaseUser } = userCredential;
       
-      // Create user document in Firestore
       const newUser = {
         email: email,
         name: email.split('@')[0],
@@ -186,14 +180,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
       
-      // Create a user object to return immediately
       const userObject = {
         id: firebaseUser.uid,
         ...newUser,
         maxFreeConversions: MAX_FREE_CONVERSIONS
       };
       
-      // Set the user state immediately to avoid delay
       setUser(userObject);
       setIsLoading(false);
       
@@ -249,10 +241,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     try {
       const newCount = user.conversionsUsed + 1;
+      console.log('Incrementing conversions used:', newCount);
       
-      await updateDoc(doc(db, 'users', user.id), {
-        conversionsUsed: newCount
-      });
+      if (navigator.onLine) {
+        try {
+          await updateDoc(doc(db, 'users', user.id), {
+            conversionsUsed: newCount
+          });
+          console.log('Firestore updated with new count:', newCount);
+        } catch (error) {
+          console.error('Error updating Firestore:', error);
+        }
+      } else {
+        console.log('Offline mode: only updating local state');
+      }
       
       setUser({
         ...user,
