@@ -74,7 +74,15 @@ const Signup = () => {
       console.error('Signup error:', error);
       let errorMessage = error instanceof Error ? error.message : "An unknown error occurred. Please try again.";
       
-      toast.error("Signup failed", {
+      // Special handling for Firebase permission errors
+      if (errorMessage.includes("permission") || errorMessage.includes("permissions")) {
+        errorMessage = "Unable to create account due to permission issues. Please try again later.";
+        // Navigate to dashboard anyway if we suspect user was created but there was a permission error
+        // getting complete user data
+        setTimeout(() => navigate('/dashboard', { replace: true }), 1500);
+      }
+      
+      toast.error("Account creation failed", {
         description: errorMessage
       });
     } finally {
