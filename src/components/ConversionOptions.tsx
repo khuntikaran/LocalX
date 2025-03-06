@@ -4,7 +4,7 @@ import { formats, getFormatByExtension, groupFormatsByCategory } from '../utils/
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { CheckIcon, ImageIcon, FileTextIcon, MusicIcon, VideoIcon, ArchiveIcon, Cube } from 'lucide-react';
+import { CheckIcon, ImageIcon, FileTextIcon, MusicIcon, VideoIcon, ArchiveIcon, Package } from 'lucide-react';
 
 interface ConversionOptionsProps {
   sourceFormat: string;
@@ -19,7 +19,7 @@ const categoryIcons = {
   audio: <MusicIcon className="w-4 h-4" />,
   video: <VideoIcon className="w-4 h-4" />,
   archive: <ArchiveIcon className="w-4 h-4" />,
-  '3d': <Cube className="w-4 h-4" />
+  '3d': <Package className="w-4 h-4" />
 };
 
 export const ConversionOptions: React.FC<ConversionOptionsProps> = ({
@@ -116,7 +116,7 @@ export const ConversionOptions: React.FC<ConversionOptionsProps> = ({
             {show3DOption && (
               <TabsTrigger value="3d" disabled={isConverting}>
                 <div className="flex items-center space-x-2">
-                  <Cube className="w-4 h-4" />
+                  <Package className="w-4 h-4" />
                   <span className="hidden sm:inline">3D</span>
                 </div>
               </TabsTrigger>
@@ -195,7 +195,7 @@ export const ConversionOptions: React.FC<ConversionOptionsProps> = ({
                       {selectedFormat === '3d' ? (
                         <CheckIcon className="h-5 w-5 text-white" />
                       ) : (
-                        <Cube className="h-5 w-5" />
+                        <Package className="h-5 w-5" />
                       )}
                     </div>
                     <div className="flex flex-col items-start">
