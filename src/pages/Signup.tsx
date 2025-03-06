@@ -67,8 +67,8 @@ const Signup = () => {
         description: "Your account has been successfully created"
       });
       
-      // Navigate to dashboard
-      navigate('/dashboard');
+      // Force immediate navigation to dashboard without waiting for auth state
+      navigate('/dashboard', { replace: true });
       
     } catch (error) {
       console.error('Signup error:', error);

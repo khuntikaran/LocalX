@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
   createUserWithEmailAndPassword, 
@@ -31,7 +30,7 @@ type AuthContextType = {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   updateSubscription: (plan: 'free' | 'premium') => Promise<void>;
   incrementConversionsUsed: () => Promise<void>;
@@ -166,7 +165,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signup = async (email: string, password: string) => {
+  const signup = async (email: string, password: string): Promise<User> => {
     setIsLoading(true);
     try {
       if (!navigator.onLine) {
@@ -187,20 +186,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
       
-      // Set the user state immediately to avoid delay
-      setUser({
+      // Create a user object to return immediately
+      const userObject = {
         id: firebaseUser.uid,
         ...newUser,
         maxFreeConversions: MAX_FREE_CONVERSIONS
-      });
+      };
+      
+      // Set the user state immediately to avoid delay
+      setUser(userObject);
+      setIsLoading(false);
+      
+      return userObject;
       
     } catch (error) {
       console.error('Signup error:', error);
       const errorMessage = formatAuthError(error as AuthError);
       toast.error('Signup failed', { description: errorMessage });
-      throw error;
-    } finally {
       setIsLoading(false);
+      throw error;
     }
   };
 
