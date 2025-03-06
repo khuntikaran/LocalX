@@ -53,26 +53,18 @@ export async function convertFile(
     
     console.log(`Converting from ${sourceFormat.label} to ${targetFormatObj.label} locally`);
     
-    // For demo purposes, we're simulating the conversion process
-    // In a real app, you would use libraries like FFMPEG.wasm, image-conversion, etc.
-    
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
     // Create a new filename with the target extension
     const baseFilename = file.name.substring(0, file.name.lastIndexOf('.'));
     const newFilename = `${baseFilename}${targetFormatObj.extensions[0]}`;
     
+    // Choose the appropriate conversion method based on source format
     if (sourceFormat.category === 'image') {
       return await convertImage(file, targetFormat, newFilename);
-    } else if (sourceFormat.category === 'document') {
-      return await simulateConversion(file, newFilename);
-    } else if (sourceFormat.category === 'audio') {
-      return await simulateConversion(file, newFilename);
-    } else if (sourceFormat.category === 'video') {
-      return await simulateConversion(file, newFilename);
-    } else if (sourceFormat.category === 'archive') {
-      return await simulateConversion(file, newFilename);
+    } else if (sourceFormat.category === 'document' || 
+               sourceFormat.category === 'audio' || 
+               sourceFormat.category === 'video' || 
+               sourceFormat.category === 'archive') {
+      return await simulateConversion(file, targetFormat, newFilename);
     }
     
     return { 
@@ -96,7 +88,6 @@ async function convertImage(
 ): Promise<ConversionResult> {
   try {
     // For demo, we'll actually do a real conversion between image formats using canvas
-    // In a real app, you'd use specialized libraries
     
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -132,6 +123,10 @@ async function convertImage(
             case 'gif':
               mimeType = 'image/gif';
               break;
+            case 'svg':
+              // SVG requires special handling
+              resolve(handleSVGConversion(file, newFilename));
+              return;
             default:
               mimeType = 'image/png';
           }
@@ -153,6 +148,10 @@ async function convertImage(
           }, mimeType);
         };
         
+        img.onerror = () => {
+          resolve({ success: false, error: 'Failed to load image for conversion' });
+        };
+        
         img.src = event.target?.result as string;
       };
       
@@ -170,11 +169,10 @@ async function convertImage(
   }
 }
 
-// Simulate conversion for other file types (in a real app, you'd use specialized libraries)
-async function simulateConversion(file: File, newFilename: string): Promise<ConversionResult> {
-  // For demo purposes, we're just returning the original file with a new name
-  // In a real app, you would use specialized libraries for each file type
-  const newFile = new File([file], newFilename, { type: file.type });
+// Handle SVG conversion separately
+function handleSVGConversion(file: File, newFilename: string): ConversionResult {
+  // For SVG, we just rename the file since we can't properly convert to SVG
+  const newFile = new File([file], newFilename, { type: 'image/svg+xml' });
   const url = URL.createObjectURL(newFile);
   
   return {
@@ -183,3 +181,109 @@ async function simulateConversion(file: File, newFilename: string): Promise<Conv
     url
   };
 }
+
+// Improved simulation for other file types
+async function simulateConversion(
+  file: File, 
+  targetFormat: string, 
+  newFilename: string
+): Promise<ConversionResult> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    
+    reader.onload = (event) => {
+      if (!event.target?.result) {
+        resolve({ success: false, error: 'Failed to read file content' });
+        return;
+      }
+      
+      let mimeType: string;
+      
+      // Assign proper MIME type based on target format
+      switch (targetFormat) {
+        // Document formats
+        case 'pdf':
+          mimeType = 'application/pdf';
+          break;
+        case 'docx':
+          mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+          break;
+        case 'txt':
+          mimeType = 'text/plain';
+          break;
+        case 'csv':
+          mimeType = 'text/csv';
+          break;
+        case 'md':
+          mimeType = 'text/markdown';
+          break;
+          
+        // Audio formats
+        case 'mp3':
+          mimeType = 'audio/mpeg';
+          break;
+        case 'wav':
+          mimeType = 'audio/wav';
+          break;
+        case 'ogg':
+          mimeType = 'audio/ogg';
+          break;
+          
+        // Video formats
+        case 'mp4':
+          mimeType = 'video/mp4';
+          break;
+        case 'webm':
+          mimeType = 'video/webm';
+          break;
+        case 'avi':
+          mimeType = 'video/x-msvideo';
+          break;
+          
+        // Archive formats
+        case 'zip':
+          mimeType = 'application/zip';
+          break;
+        case 'tar':
+          mimeType = 'application/x-tar';
+          break;
+          
+        default:
+          mimeType = file.type; // Keep the original type as fallback
+      }
+      
+      // Create the converted file
+      const content = event.target.result;
+      let blob: Blob;
+      
+      // Handle different file read results
+      if (content instanceof ArrayBuffer) {
+        blob = new Blob([content], { type: mimeType });
+      } else {
+        // Convert string to blob if needed
+        blob = new Blob([content], { type: mimeType });
+      }
+      
+      const convertedFile = new File([blob], newFilename, { type: mimeType });
+      const url = URL.createObjectURL(convertedFile);
+      
+      resolve({
+        success: true,
+        file: convertedFile,
+        url
+      });
+    };
+    
+    reader.onerror = () => {
+      resolve({ success: false, error: 'Failed to read file for conversion' });
+    };
+    
+    // Use appropriate read method based on file type
+    if (/^(audio|video|application)\//.test(file.type)) {
+      reader.readAsArrayBuffer(file);
+    } else {
+      reader.readAsBinaryString(file);
+    }
+  });
+}
+

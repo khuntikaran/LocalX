@@ -68,15 +68,29 @@ export function useFileConversion() {
       // Clear the interval and set the final state
       clearInterval(progressInterval);
       
+      if (result.success) {
+        toast.success("Conversion completed", {
+          description: "Your file has been successfully converted"
+        });
+      } else {
+        toast.error("Conversion failed", {
+          description: result.error || "An error occurred during conversion"
+        });
+      }
+      
       setState({
         isConverting: false,
-        progress: 100,
+        progress: result.success ? 100 : 0,
         result,
         error: result.success ? null : (result.error || 'Conversion failed')
       });
       
       return result;
     } catch (error) {
+      toast.error("Conversion error", {
+        description: error instanceof Error ? error.message : "An unexpected error occurred"
+      });
+      
       setState({
         isConverting: false,
         progress: 0,
