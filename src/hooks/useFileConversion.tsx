@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { convertFile, ConversionResult } from '../utils/fileConversion';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
@@ -22,6 +22,15 @@ export function useFileConversion() {
   const { user } = useAuth();
   const isPremium = user?.subscription === 'premium';
   
+  // Clean up object URLs when component unmounts or when result changes
+  useEffect(() => {
+    return () => {
+      if (state.result?.url) {
+        URL.revokeObjectURL(state.result.url);
+      }
+    };
+  }, [state.result]);
+  
   const startConversion = async (file: File, targetFormat: string) => {
     console.log(`Starting conversion of ${file.name} to ${targetFormat}`);
     
@@ -43,61 +52,75 @@ export function useFileConversion() {
           isConverting: false,
           error: `File too large. ${isPremium ? 'Premium' : 'Free'} plan allows ${isPremium ? '100MB' : '5MB'} max.`
         }));
+        
+        toast.error("File size limit exceeded", {
+          description: `${isPremium ? 'Premium' : 'Free'} plan allows ${isPremium ? '100MB' : '5MB'} max.`
+        });
+        
         return null;
       }
 
-      toast.info("Converting locally", {
-        description: "Your file is being processed on your device, not on our servers"
+      // Inform user about local processing
+      toast.info("Processing locally", {
+        description: "Your file is being processed on your device, ensuring privacy"
       });
       
-      // Show progress updates
-      const progressInterval = setInterval(() => {
+      // Simulate progress
+      let progressInterval = setInterval(() => {
         setState(prev => {
-          // Only update progress if still converting
           if (!prev.isConverting || prev.progress >= 90) {
             clearInterval(progressInterval);
             return prev;
           }
           return {
             ...prev,
-            progress: Math.min(prev.progress + Math.random() * 5, 90)
+            progress: Math.min(prev.progress + Math.random() * 3, 90) // Slower, more realistic progress
           };
         });
       }, 300);
       
       console.log(`Converting file: ${file.name}, size: ${file.size}, type: ${file.type}`);
       
-      // Perform the conversion
+      // Perform the actual conversion
       const result = await convertFile(file, targetFormat);
       
-      console.log("Conversion result:", result);
-      
-      // Clear the interval and set the final state
+      // Clear interval and set final state
       clearInterval(progressInterval);
+      progressInterval = 0;
+      
+      console.log("Conversion result:", result);
       
       if (result.success) {
         toast.success("Conversion completed", {
           description: "Your file has been successfully converted and is ready to download"
         });
         
-        // Verify the converted file
-        console.log("Converted file:", {
+        // Validate the converted file
+        console.log("Converted file details:", {
           name: result.file?.name,
           size: result.file?.size,
-          type: result.file?.type
+          type: result.file?.type,
+          url: result.url?.substring(0, 50) + "..."
+        });
+        
+        setState({
+          isConverting: false,
+          progress: 100,
+          result,
+          error: null
         });
       } else {
         toast.error("Conversion failed", {
           description: result.error || "An error occurred during conversion"
         });
+        
+        setState({
+          isConverting: false,
+          progress: 0,
+          result: null,
+          error: result.error || 'Conversion failed'
+        });
       }
-      
-      setState({
-        isConverting: false,
-        progress: result.success ? 100 : 0,
-        result,
-        error: result.success ? null : (result.error || 'Conversion failed')
-      });
       
       return result;
     } catch (error) {
