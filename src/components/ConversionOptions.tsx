@@ -33,10 +33,8 @@ export const ConversionOptions: React.FC<ConversionOptionsProps> = ({
   
   if (!sourceFormatObj) {
     return (
-      <div className="text-center p-4 bg-red-50 rounded-lg border border-red-100 dark:bg-red-900/20 dark:border-red-800/30">
-        <p className="text-red-600 dark:text-red-400">
-          Source format not recognized. Please try a different file.
-        </p>
+      <div className="text-center p-4 glass-card backdrop-blur-md bg-red-500/10 border border-red-500/20 rounded-xl text-red-600 dark:text-red-400">
+        <p>Source format not recognized. Please try a different file.</p>
       </div>
     );
   }
@@ -64,8 +62,8 @@ export const ConversionOptions: React.FC<ConversionOptionsProps> = ({
     <div className="w-full max-w-xl mx-auto mt-8 animate-fade-up">
       <div className="mb-4">
         <Label className="text-base font-medium">Source Format:</Label>
-        <div className="mt-2 p-3 bg-gray-50 rounded-lg flex items-center space-x-3 dark:bg-gray-800">
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
+        <div className="mt-2 p-3 glass-card backdrop-blur-md bg-white/10 border border-white/20 dark:bg-gray-900/30 dark:border-gray-700/30 rounded-lg flex items-center space-x-3">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white">
             {categoryIcons[sourceFormatObj.category]}
           </div>
           <div>
@@ -81,40 +79,40 @@ export const ConversionOptions: React.FC<ConversionOptionsProps> = ({
       
       <div className="mb-4">
         <Label className="text-base font-medium mb-2 block">Convert To:</Label>
-        <Tabs defaultValue={sourceFormatObj.category} value={selectedTab} onValueChange={handleTabChange}>
-          <TabsList className={`grid ${show3DOption ? 'grid-cols-6' : 'grid-cols-5'} mb-4`}>
-            <TabsTrigger value="image" disabled={isConverting}>
+        <Tabs defaultValue={sourceFormatObj.category} value={selectedTab} onValueChange={handleTabChange} className="w-full">
+          <TabsList className={`grid ${show3DOption ? 'grid-cols-6' : 'grid-cols-5'} mb-4 p-1 backdrop-blur-md bg-white/10 border border-white/20 dark:bg-gray-900/30 dark:border-gray-700/30 rounded-lg`}>
+            <TabsTrigger value="image" disabled={isConverting} className="data-[state=active]:bg-gradient-to-r from-blue-500 to-indigo-500 data-[state=active]:text-white">
               <div className="flex items-center space-x-2">
                 <ImageIcon className="w-4 h-4" />
                 <span className="hidden sm:inline">Image</span>
               </div>
             </TabsTrigger>
-            <TabsTrigger value="document" disabled={isConverting}>
+            <TabsTrigger value="document" disabled={isConverting} className="data-[state=active]:bg-gradient-to-r from-blue-500 to-indigo-500 data-[state=active]:text-white">
               <div className="flex items-center space-x-2">
                 <FileTextIcon className="w-4 h-4" />
                 <span className="hidden sm:inline">Document</span>
               </div>
             </TabsTrigger>
-            <TabsTrigger value="audio" disabled={isConverting}>
+            <TabsTrigger value="audio" disabled={isConverting} className="data-[state=active]:bg-gradient-to-r from-blue-500 to-indigo-500 data-[state=active]:text-white">
               <div className="flex items-center space-x-2">
                 <MusicIcon className="w-4 h-4" />
                 <span className="hidden sm:inline">Audio</span>
               </div>
             </TabsTrigger>
-            <TabsTrigger value="video" disabled={isConverting}>
+            <TabsTrigger value="video" disabled={isConverting} className="data-[state=active]:bg-gradient-to-r from-blue-500 to-indigo-500 data-[state=active]:text-white">
               <div className="flex items-center space-x-2">
                 <VideoIcon className="w-4 h-4" />
                 <span className="hidden sm:inline">Video</span>
               </div>
             </TabsTrigger>
-            <TabsTrigger value="archive" disabled={isConverting}>
+            <TabsTrigger value="archive" disabled={isConverting} className="data-[state=active]:bg-gradient-to-r from-blue-500 to-indigo-500 data-[state=active]:text-white">
               <div className="flex items-center space-x-2">
                 <ArchiveIcon className="w-4 h-4" />
                 <span className="hidden sm:inline">Archive</span>
               </div>
             </TabsTrigger>
             {show3DOption && (
-              <TabsTrigger value="3d" disabled={isConverting}>
+              <TabsTrigger value="3d" disabled={isConverting} className="data-[state=active]:bg-gradient-to-r from-blue-500 to-indigo-500 data-[state=active]:text-white">
                 <div className="flex items-center space-x-2">
                   <Package className="w-4 h-4" />
                   <span className="hidden sm:inline">3D</span>
@@ -127,7 +125,7 @@ export const ConversionOptions: React.FC<ConversionOptionsProps> = ({
           {Object.keys(groupedFormats).filter(cat => cat !== '3d').map((category) => (
             <TabsContent key={category} value={category} className="pt-2">
               {category !== sourceFormatObj.category ? (
-                <div className="p-4 bg-amber-50 rounded-lg border border-amber-100 text-amber-800 mb-4 dark:bg-amber-900/20 dark:border-amber-800/30 dark:text-amber-400">
+                <div className="p-4 glass-card backdrop-blur-md bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-800 mb-4 dark:text-amber-400">
                   <p>
                     Cross-category conversions require specialized processing and may result in quality loss.
                   </p>
@@ -141,8 +139,10 @@ export const ConversionOptions: React.FC<ConversionOptionsProps> = ({
                     <Button
                       key={format.id}
                       variant={selectedFormat === format.id ? "default" : "outline"}
-                      className={`justify-start h-auto py-3 px-4 ${
-                        selectedFormat === format.id ? "border-primary" : ""
+                      className={`justify-start h-auto py-3 px-4 backdrop-blur-md ${
+                        selectedFormat === format.id 
+                          ? "bg-gradient-to-r from-blue-500 to-indigo-500 border-0 text-white" 
+                          : "glass-card bg-white/10 border-white/20 dark:bg-gray-900/30 dark:border-gray-700/30"
                       }`}
                       onClick={() => onSelectFormat(format.id)}
                       disabled={isConverting}
@@ -165,7 +165,7 @@ export const ConversionOptions: React.FC<ConversionOptionsProps> = ({
               </div>
               
               {(!groupedFormats[category] || groupedFormats[category].filter(format => format.id !== sourceFormatObj.id).length === 0) && (
-                <p className="text-center text-gray-500 my-4">
+                <p className="text-center text-gray-500 my-4 dark:text-gray-400">
                   No conversion options available for this category.
                 </p>
               )}
@@ -175,7 +175,7 @@ export const ConversionOptions: React.FC<ConversionOptionsProps> = ({
           {/* Special 3D conversion tab */}
           {show3DOption && (
             <TabsContent key="3d" value="3d" className="pt-2">
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 text-blue-800 mb-4 dark:bg-blue-900/20 dark:border-blue-800/30 dark:text-blue-400">
+              <div className="p-4 glass-card backdrop-blur-md bg-blue-500/10 border border-blue-500/20 rounded-lg text-blue-800 mb-4 dark:text-blue-400">
                 <p>
                   Convert your image to a 3D height map. Works best with images that have clear contrast.
                 </p>
@@ -185,7 +185,9 @@ export const ConversionOptions: React.FC<ConversionOptionsProps> = ({
                 <Button
                   variant={selectedFormat === '3d' ? "default" : "outline"}
                   className={`justify-start h-auto py-3 px-4 ${
-                    selectedFormat === '3d' ? "border-primary" : ""
+                    selectedFormat === '3d' 
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-500 border-0 text-white" 
+                      : "glass-card backdrop-blur-md bg-white/10 border-white/20 dark:bg-gray-900/30 dark:border-gray-700/30"
                   }`}
                   onClick={() => onSelectFormat('3d')}
                   disabled={isConverting}

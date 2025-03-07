@@ -101,29 +101,37 @@ export const FileDropzone = ({
   return (
     <div 
       className={`w-full max-w-xl mx-auto transition-all duration-300 ease-in-out ${
-        isDragging ? 'scale-102 shadow-lg' : ''
+        isDragging ? 'scale-102 shadow-2xl' : ''
       }`}
     >
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleFileDrop}
-        className={`relative flex flex-col items-center justify-center w-full p-8 transition-all duration-200 border-2 border-dashed rounded-xl ${
+        className={`relative flex flex-col items-center justify-center w-full p-8 transition-all duration-300 border-2 border-dashed rounded-xl backdrop-blur-lg ${
           isDragging 
-            ? 'border-primary bg-primary/5 file-drop-active' 
-            : 'border-gray-300 hover:border-primary/70 dark:border-gray-700'
+            ? 'border-indigo-500 bg-indigo-500/5 file-drop-active shadow-lg shadow-indigo-500/20' 
+            : 'border-gray-300 hover:border-indigo-400/70 dark:border-gray-700'
         } ${
-          file ? 'bg-gray-50 dark:bg-gray-900/50' : 'bg-white/70 dark:bg-gray-900/30'
+          file 
+            ? 'glass-card backdrop-blur-md bg-white/10 border-white/20 dark:bg-gray-900/30 dark:border-gray-700/30' 
+            : 'bg-white/5 dark:bg-gray-900/20'
         }`}
       >
         {!file ? (
           <>
             <div className="flex flex-col items-center justify-center py-10 text-center">
-              <UploadIcon
-                className={`w-16 h-16 mb-4 ${
-                  isDragging ? 'text-primary animate-pulse' : 'text-gray-400'
-                }`}
-              />
+              <div className={`w-20 h-20 mb-4 rounded-full flex items-center justify-center bg-gradient-to-r ${
+                isDragging 
+                  ? 'from-indigo-500 to-purple-500 animate-pulse' 
+                  : 'from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-700'
+              }`}>
+                <UploadIcon
+                  className={`w-8 h-8 ${
+                    isDragging ? 'text-white' : 'text-gray-500 dark:text-gray-400'
+                  }`}
+                />
+              </div>
               <h3 className="mb-1 font-semibold text-gray-900 dark:text-white">
                 Drag & drop your file here
               </h3>
@@ -143,7 +151,7 @@ export const FileDropzone = ({
               <Button
                 type="button"
                 onClick={handleButtonClick}
-                className="mt-4 animate-fade-in"
+                className="mt-4 animate-fade-in bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 border-0"
                 disabled={isConverting}
               >
                 Browse Files
@@ -172,8 +180,8 @@ export const FileDropzone = ({
                 <XIcon className="w-4 h-4" />
               </Button>
             </div>
-            <div className="flex items-center p-4 space-x-4 bg-white border rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary">
+            <div className="flex items-center p-4 space-x-4 glass-card backdrop-blur-md border border-white/20 dark:border-gray-700/30 rounded-lg shadow-lg">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white">
                 <FileIcon className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">

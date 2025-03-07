@@ -68,7 +68,7 @@ export const FileConverter = () => {
     if (!hasRemainingFreeConversions) {
       toast({
         title: "Free limit reached",
-        description: "You've used your 5 free conversions. Please upgrade to premium to continue.",
+        description: "You've used your 10 free conversions. Please upgrade to premium to continue.",
         variant: "destructive"
       });
       return;
@@ -111,7 +111,7 @@ export const FileConverter = () => {
   
   // Show remaining conversions for free users
   const getRemainingConversions = () => {
-    if (!isAuthenticated || !user) return 10; // Updated to 10
+    if (!isAuthenticated || !user) return 10;
     if (user.subscription === 'premium') return '∞';
     return Math.max(0, user.maxFreeConversions - user.conversionsUsed);
   };
@@ -119,7 +119,7 @@ export const FileConverter = () => {
   return (
     <div className="w-full max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-500 bg-clip-text text-transparent">
           Convert Your Files Locally
         </h2>
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
@@ -127,7 +127,7 @@ export const FileConverter = () => {
         </p>
         
         {isAuthenticated && (
-          <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+          <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium glass-card backdrop-blur-md bg-white/10 border border-white/20 text-blue-500 dark:text-blue-300">
             {user?.subscription === 'premium' ? (
               <>Premium Account</>
             ) : (
@@ -140,14 +140,14 @@ export const FileConverter = () => {
       {/* Conversion limit warning for non-premium users */}
       {isAuthenticated && 
        user?.subscription !== 'premium' && 
-       user?.conversionsUsed >= 6 && // Updated threshold
+       user?.conversionsUsed >= 6 && 
        user?.conversionsUsed < user?.maxFreeConversions && (
-        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800/30 dark:text-yellow-400">
+        <div className="mb-6 p-4 glass-card backdrop-blur-md bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-800 dark:text-amber-400">
           <p className="font-medium">You have {user.maxFreeConversions - user.conversionsUsed} free conversions left</p>
           <p className="text-sm mt-1">Upgrade to premium for unlimited conversions.</p>
           <div className="mt-3">
             <Link to="/dashboard">
-              <Button variant="outline" size="sm">Upgrade Now</Button>
+              <Button variant="outline" size="sm" className="border-amber-500/50 hover:bg-amber-500/20">Upgrade Now</Button>
             </Link>
           </div>
         </div>
@@ -155,14 +155,16 @@ export const FileConverter = () => {
       
       {/* Free limit reached message */}
       {!hasRemainingFreeConversions && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-lg text-red-600 flex items-start space-x-3 dark:bg-red-900/20 dark:border-red-800/30 dark:text-red-400">
+        <div className="mb-6 p-4 glass-card backdrop-blur-md bg-red-500/10 border border-red-500/20 rounded-xl flex items-start space-x-3 text-red-600 dark:text-red-400">
           <Lock className="h-5 w-5 mt-0.5 flex-shrink-0" />
           <div>
             <p className="font-medium">Free limit reached</p>
             <p className="text-sm mt-1">You've used all 10 free conversions. Upgrade to premium for unlimited conversions.</p>
             <div className="mt-3">
               <Link to="/dashboard">
-                <Button>Upgrade to Premium</Button>
+                <Button className="bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600">
+                  Upgrade to Premium
+                </Button>
               </Link>
             </div>
           </div>
@@ -190,7 +192,7 @@ export const FileConverter = () => {
               <Button
                 onClick={handleConvert}
                 disabled={isConverting || !targetFormat || !hasRemainingFreeConversions}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500 hover:from-indigo-600 hover:via-purple-600 hover:to-blue-600 border-0"
                 size="lg"
               >
                 {isConverting ? (
@@ -215,12 +217,14 @@ export const FileConverter = () => {
                 <span>Converting...</span>
                 <span>{progress.toFixed(0)}%</span>
               </div>
-              <Progress value={progress} className="w-full h-2" />
+              <Progress value={progress} className="w-full h-2 bg-gray-200 dark:bg-gray-700">
+                <div className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full transition-all duration-300"></div>
+              </Progress>
             </div>
           )}
           
           {error && (
-            <div className="mt-8 p-4 bg-red-50 border border-red-100 rounded-lg text-red-600 flex items-start space-x-3 animate-fade-in dark:bg-red-900/20 dark:border-red-800/30 dark:text-red-400">
+            <div className="mt-8 p-4 glass-card backdrop-blur-md bg-red-500/10 border border-red-500/20 rounded-xl flex items-start space-x-3 animate-fade-in text-red-600 dark:text-red-400">
               <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="font-medium">Conversion failed</p>
@@ -230,9 +234,9 @@ export const FileConverter = () => {
           )}
         </>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm animate-scale-in dark:bg-gray-800 dark:border-gray-700">
+        <div className="glass-card backdrop-blur-md bg-white/10 dark:bg-gray-900/30 border border-white/20 dark:border-gray-700/30 rounded-xl p-6 shadow-xl animate-scale-in">
           <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 text-green-600 mb-4 dark:bg-green-900/30 dark:text-green-400">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-blue-500 text-white mb-4">
               <CheckCircle className="h-6 w-6" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -247,7 +251,7 @@ export const FileConverter = () => {
             <Button
               onClick={handleDownload}
               size="lg"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 border-0"
             >
               <Download className="mr-2 h-4 w-4" />
               Download File
@@ -257,7 +261,7 @@ export const FileConverter = () => {
               onClick={handleReset}
               variant="outline"
               size="lg"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto border-white/20 dark:border-gray-700/50 backdrop-blur-sm"
             >
               Convert Another File
             </Button>

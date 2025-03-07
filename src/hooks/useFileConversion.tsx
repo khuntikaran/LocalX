@@ -48,21 +48,22 @@ export function useFileConversion() {
         description: "Your file is being processed on your device, not on our servers"
       });
       
-      // Simulate progress updates
+      // Show progress updates
       const progressInterval = setInterval(() => {
         setState(prev => {
-          if (prev.progress >= 90) {
+          // Only update progress if still converting
+          if (!prev.isConverting || prev.progress >= 90) {
             clearInterval(progressInterval);
             return prev;
           }
           return {
             ...prev,
-            progress: Math.min(prev.progress + Math.random() * 10, 90)
+            progress: Math.min(prev.progress + Math.random() * 5, 90)
           };
         });
-      }, 200);
+      }, 300);
       
-      // Perform the conversion locally
+      // Perform the conversion
       const result = await convertFile(file, targetFormat);
       
       // Clear the interval and set the final state
