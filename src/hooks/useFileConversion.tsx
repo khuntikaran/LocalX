@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { convertFile, ConversionResult } from '../utils/fileConversion';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
@@ -21,12 +21,17 @@ export function useFileConversion() {
   
   const { user } = useAuth();
   const isPremium = user?.subscription === 'premium';
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // Clean up object URLs when component unmounts or when result changes
   useEffect(() => {
     return () => {
       if (state.result?.url) {
         URL.revokeObjectURL(state.result.url);
+      }
+      // Clear interval if it exists
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
       }
     };
   }, [state.result]);
@@ -60,21 +65,28 @@ export function useFileConversion() {
         return null;
       }
 
+      // Clear any existing interval
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+
       // Inform user about local processing
       toast.info("Processing locally", {
         description: "Your file is being processed on your device, ensuring privacy"
       });
       
       // Simulate progress
-      let progressInterval = setInterval(() => {
+      progressIntervalRef.current = setInterval(() => {
         setState(prev => {
           if (!prev.isConverting || prev.progress >= 90) {
-            clearInterval(progressInterval);
+            if (progressIntervalRef.current) {
+              clearInterval(progressIntervalRef.current);
+            }
             return prev;
           }
           return {
             ...prev,
-            progress: Math.min(prev.progress + Math.random() * 3, 90) // Slower, more realistic progress
+            progress: Math.min(prev.progress + Math.random() * 3, 90)
           };
         });
       }, 300);
@@ -84,9 +96,11 @@ export function useFileConversion() {
       // Perform the actual conversion
       const result = await convertFile(file, targetFormat);
       
-      // Clear interval and set final state
-      clearInterval(progressInterval);
-      progressInterval = 0;
+      // Clear interval
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
       
       console.log("Conversion result:", result);
       
@@ -126,6 +140,12 @@ export function useFileConversion() {
     } catch (error) {
       console.error("Conversion error:", error);
       
+      // Clear interval on error
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+      
       toast.error("Conversion error", {
         description: error instanceof Error ? error.message : "An unexpected error occurred"
       });
@@ -145,6 +165,12 @@ export function useFileConversion() {
     // Release any object URLs to prevent memory leaks
     if (state.result?.url) {
       URL.revokeObjectURL(state.result.url);
+    }
+    
+    // Clear any existing interval
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
     }
     
     setState({
