@@ -70,15 +70,15 @@ export function useFileConversion() {
         clearInterval(progressIntervalRef.current);
       }
 
-      // Inform user about local processing
-      toast.info("Processing locally", {
-        description: "Your file is being processed on your device, ensuring privacy"
+      // Inform user about processing
+      toast.info("Processing file", {
+        description: "Your file is being processed, please wait..."
       });
       
       // Simulate progress
       progressIntervalRef.current = setInterval(() => {
         setState(prev => {
-          if (!prev.isConverting || prev.progress >= 90) {
+          if (!prev.isConverting || prev.progress >= 85) {
             if (progressIntervalRef.current) {
               clearInterval(progressIntervalRef.current);
             }
@@ -86,7 +86,7 @@ export function useFileConversion() {
           }
           return {
             ...prev,
-            progress: Math.min(prev.progress + Math.random() * 3, 90)
+            progress: Math.min(prev.progress + Math.random() * 2, 85)
           };
         });
       }, 300);
@@ -114,7 +114,7 @@ export function useFileConversion() {
           name: result.file?.name,
           size: result.file?.size,
           type: result.file?.type,
-          url: result.url?.substring(0, 50) + "..."
+          url: result.url ? (result.url.substring(0, 50) + "...") : "No URL"
         });
         
         setState({
