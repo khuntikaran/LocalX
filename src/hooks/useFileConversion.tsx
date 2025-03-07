@@ -23,6 +23,8 @@ export function useFileConversion() {
   const isPremium = user?.subscription === 'premium';
   
   const startConversion = async (file: File, targetFormat: string) => {
+    console.log(`Starting conversion of ${file.name} to ${targetFormat}`);
+    
     // Reset state
     setState({
       isConverting: true,
@@ -41,7 +43,7 @@ export function useFileConversion() {
           isConverting: false,
           error: `File too large. ${isPremium ? 'Premium' : 'Free'} plan allows ${isPremium ? '100MB' : '5MB'} max.`
         }));
-        return;
+        return null;
       }
 
       toast.info("Converting locally", {
@@ -63,15 +65,26 @@ export function useFileConversion() {
         });
       }, 300);
       
+      console.log(`Converting file: ${file.name}, size: ${file.size}, type: ${file.type}`);
+      
       // Perform the conversion
       const result = await convertFile(file, targetFormat);
+      
+      console.log("Conversion result:", result);
       
       // Clear the interval and set the final state
       clearInterval(progressInterval);
       
       if (result.success) {
         toast.success("Conversion completed", {
-          description: "Your file has been successfully converted"
+          description: "Your file has been successfully converted and is ready to download"
+        });
+        
+        // Verify the converted file
+        console.log("Converted file:", {
+          name: result.file?.name,
+          size: result.file?.size,
+          type: result.file?.type
         });
       } else {
         toast.error("Conversion failed", {
@@ -88,6 +101,8 @@ export function useFileConversion() {
       
       return result;
     } catch (error) {
+      console.error("Conversion error:", error);
+      
       toast.error("Conversion error", {
         description: error instanceof Error ? error.message : "An unexpected error occurred"
       });
@@ -98,10 +113,17 @@ export function useFileConversion() {
         result: null,
         error: error instanceof Error ? error.message : 'An unexpected error occurred'
       });
+      
+      return null;
     }
   };
   
   const reset = () => {
+    // Release any object URLs to prevent memory leaks
+    if (state.result?.url) {
+      URL.revokeObjectURL(state.result.url);
+    }
+    
     setState({
       isConverting: false,
       progress: 0,
